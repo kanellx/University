@@ -1,0 +1,64 @@
+// Boot the server
+s = Server.default;
+s.boot;
+
+// Define the synth for the melody
+SynthDef(\melodySynth, {
+    |freq = 440, amp = 0.1, dur = 0.2|
+    var env = EnvGen.kr(Env.perc(0.01, dur), doneAction: 2);
+    var osc = Pulse.ar(freq, 0.5) * env; // Using a pulse wave for a different timbre
+    Out.ar(0, osc * amp);
+}).add;
+
+// Define the synth for the bassline
+SynthDef(\bassSynth, {
+    |freq = 110, amp = 0.2, dur = 0.4|
+    var env = EnvGen.kr(Env.perc(0.01, dur), doneAction: 2);
+    var osc = Saw.ar(freq) * env; // Using a saw wave for a deep bass sound
+    Out.ar(0, osc * amp);
+}).add;
+
+// Define the synth for the drum beat
+SynthDef(\drum, {
+    |amp = 0.3, dur = 0.15|
+    var env = EnvGen.kr(Env.perc(0.01, dur), doneAction: 2);
+    var osc = WhiteNoise.ar(0.5);
+    Out.ar(0, BPF.ar(osc, 1500, 0.2) * env * amp);
+}).add;
+
+// Melody pattern
+melody = Pbind(
+    \instrument, \melodySynth,
+    \freq, Pseq([440, 494, 523, 587, 659, 698, 784, 880], inf), // A scale
+    \dur, 0.25, // Note duration
+    \amp, 0.1
+);
+
+// Bassline pattern
+bass = Pbind(
+    \instrument, \bassSynth,
+    \freq, Pseq([110, 130.81, 146.83, 174.61], inf), // A bass pattern
+    \dur, 1, // Note duration
+    \amp, 0.2
+);
+
+// Drum pattern
+drums = Pbind(
+    \instrument, \drum,
+    \dur, Pseq([0.5, 0.5, 0.5, 0.5], inf) // Simple four-on-the-floor beat
+);
+
+// Play the patterns
+m = melody.play;
+b = bass.play;
+d = drums.play;
+
+// Stop the patterns after 32 seconds
+(
+    Task({
+        32.wait;
+        m.stop;
+        b.stop;
+        d.stop;
+    }).start;
+);
